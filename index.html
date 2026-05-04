@@ -40,7 +40,10 @@
   .modal { position:relative; background:#181818; border:1px solid rgba(255,255,255,0.1); border-radius:18px; width:100%; max-width:640px; max-height:82vh; display:flex; flex-direction:column; box-shadow:0 40px 100px rgba(0,0,0,0.7),0 1px 0 rgba(255,255,255,0.07) inset; transform:translateY(16px); transition:transform 0.35s cubic-bezier(0.16,1,0.3,1); overflow:hidden; }
   .modal-overlay.visible .modal { transform:translateY(0); }
   .modal::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); }
-  .modal-header { display:flex; align-items:center; justify-content:space-between; padding:1.6rem 2rem 1.2rem; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .modal-header { display:flex; flex-direction:column; padding:1.6rem 2rem 0; border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
+  .modal-header-top { display:flex; align-items:center; justify-content:space-between; padding-bottom:1.2rem; }
+  .modal-header-tabs { display:none; padding-bottom:0; }
+  .modal-header-tabs.visible { display:block; }
   .modal-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:400; color:rgba(255,255,255,0.88); }
   .modal-close { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.45); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s,color 0.2s; flex-shrink:0; font-family:'Inter',sans-serif; }
   .modal-close:hover { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); }
@@ -78,7 +81,7 @@
   .pill-dim { border-color:rgba(255,255,255,0.06); color:rgba(255,255,255,0.35); }
 
   /* Creative */
-  .tab-nav { display:flex; gap:4px; margin-bottom:1.8rem; background:rgba(255,255,255,0.04); border-radius:10px; padding:4px; }
+  .tab-nav { display:flex; gap:4px; margin-bottom:0; background:rgba(255,255,255,0.04); border-radius:10px; padding:4px; margin-bottom: 0; }
   .tab-btn { flex:1; padding:8px 12px; border:none; border-radius:7px; font-family:'Inter',sans-serif; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:background 0.2s,color 0.2s; background:transparent; color:rgba(255,255,255,0.35); }
   .tab-btn.active { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); }
   .tab-panel { display:none; }
@@ -114,34 +117,77 @@
   }
   #loader.fade-out { opacity: 0; pointer-events: none; }
 
+  .loader-ring-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .loader-ring-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .loader-ring-progress {
+    transition: stroke-dashoffset 0.15s linear;
+  }
   .loader-monogram {
-    width: 72px;
-    height: 72px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: #1a1a1a;
-    border: 1px solid rgba(255,255,255,0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Playfair Display', serif;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 400;
     color: rgba(255,255,255,0.85);
     letter-spacing: 1px;
-    animation: loader-pulse 1.6s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
   }
 
-  @keyframes loader-pulse {
-    0%, 100% { opacity: 0.3; transform: scale(0.96); }
-    50%       { opacity: 1;   transform: scale(1); }
+  /* ── Back to top button inside modal ── */
+  .modal-top-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, background 0.2s;
+    z-index: 1001;
   }
+  .modal-top-btn.visible { opacity: 1; pointer-events: all; }
+  .modal-top-btn:hover { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.8); }
 </style>
 </head>
 <body>
 
 <!-- Loading screen -->
 <div id="loader">
-  <div class="loader-monogram">SL</div>
+  <div class="loader-ring-wrap">
+    <svg class="loader-ring-svg" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+      <circle class="loader-ring-track" cx="36" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+      <circle class="loader-ring-progress" id="loaderProgress" cx="36" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/>
+    </svg>
+    <div class="loader-monogram">SL</div>
+  </div>
 </div>
 
 
@@ -171,8 +217,11 @@
 <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title" id="modalTitle"></span>
-      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+      <div class="modal-header-top">
+        <span class="modal-title" id="modalTitle"></span>
+        <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+      </div>
+      <div class="modal-header-tabs" id="modalHeaderTabs"></div>
     </div>
     <div class="modal-body" id="modalBody"></div>
   </div>
@@ -184,7 +233,7 @@
   <p style="font-family:'Playfair Display',serif;font-style:italic;font-size:15px;color:rgba(255,255,255,0.45);border-left:2px solid rgba(255,255,255,0.12);padding-left:1rem;margin-bottom:1.6rem;line-height:1.7;">"Strong data builds strong teams. Strong teams build strong outcomes."</p>
   <p>I'm a senior claims leader with eighteen years of experience at Farmers Insurance, specializing in large loss, catastrophic injury, and complex coverage litigation. I currently serve as Territory Manager in Complex Claims &amp; Large Loss, leading a team of General Adjusters handling high-exposure claims across New York, Illinois, and Wisconsin.</p>
   <p>Over the course of my career, I've developed a reputation for building high-performing teams, leveraging data and technology to drive operational outcomes, and developing adjuster talent at scale. I believe that great claims outcomes and a healthy team culture are not mutually exclusive — and my team's employee experience survey scores consistently ranking above zone, company, division, and industry averages is a reflection of that belief, and evidence that the data-driven approach and the human one don't have to be in conflict.</p>
-  <p>Beyond my management role, I've contributed to the field at an organizational level — co-designing a Power BI diagnostic tool now deployed throughout Complex Claims, creating mentorship programs that were adopted zone-wide, and serving as a technical resource and trainer across multiple system migrations. My claims experience spans a wide range of venues and exposure types, from unrepresented soft tissue claims early in my career through represented and litigated files, and ultimately into large loss, catastrophic injury, and complex coverage litigation — giving me a ground-level understanding of the full claims lifecycle that informs how I lead and develop adjusters today.</p>
+  <p>Beyond my management role, I've contributed to the field at an organizational level — co-designing a Power BI diagnostic tool now deployed throughout Complex Claims, creating mentorship programs that were adopted zone-wide, and serving as a technical resource and trainer across multiple system migrations. This site itself was designed and built in collaboration with AI — a practical example of how I approach new tools: hands-on, with purpose. My claims experience spans a wide range of venues and exposure types, from unrepresented soft tissue claims early in my career through represented and litigated files, and ultimately into large loss, catastrophic injury, and complex coverage litigation — giving me a ground-level understanding of the full claims lifecycle that informs how I lead and develop adjusters today.</p>
   <p>I hold the <strong>CPCU designation</strong> — the most prestigious credential in property and casualty insurance — along with the SCLA Gold, AIC-M, and AINS. I'm currently pursuing my <strong>MBA at the University of Texas Permian Basin</strong> (AACSB Accredited).</p>
   <p>I began my career in liability claims in 2008 after graduating <em>cum laude</em> from Illinois State University with a degree in History Education, where I received the Lawrence McBride Award for Outstanding Student Teaching. I live in Lake Zurich, Illinois with my wife and two children.</p>
 </template>
@@ -282,7 +331,7 @@
 
   <p class="section-label">Core Competencies</p>
   <div class="pill-row">
-    <span class="pill pill-dim">Large Loss &amp; Cat Injury</span><span class="pill pill-dim">Complex Coverage Litigation</span><span class="pill pill-dim">Team Leadership &amp; Development</span><span class="pill pill-dim">Claims Quality Management</span><span class="pill pill-dim">Data Analytics &amp; Reporting</span><span class="pill pill-dim">Training Program Development</span><span class="pill pill-dim">SharePoint</span><span class="pill pill-dim">Executive Communication</span>
+    <span class="pill pill-dim">Large Loss &amp; Cat Injury</span><span class="pill pill-dim">Complex Coverage Litigation</span><span class="pill pill-dim">Team Leadership &amp; Development</span><span class="pill pill-dim">Claims Quality Management</span><span class="pill pill-dim">Data Analytics &amp; Reporting</span><span class="pill pill-dim">Training Program Development</span><span class="pill pill-dim">SharePoint</span><span class="pill pill-dim">AI-Assisted Workflows</span><span class="pill pill-dim">Executive Communication</span>
   </div></template>
 
 <template id="tpl-creative">
@@ -466,6 +515,14 @@
   }
 
   function initCreative(body) {
+    // Move tab nav into modal header
+    var tabNav = body.querySelector('.tab-nav');
+    var headerTabs = document.getElementById('modalHeaderTabs');
+    if (tabNav && headerTabs) {
+      headerTabs.appendChild(tabNav);
+      headerTabs.classList.add('visible');
+      headerTabs.style.paddingBottom = '12px';
+    }
     // Build grids
     body.querySelectorAll('[data-grid]').forEach(function(grid) {
       var type = grid.dataset.grid, count = parseInt(grid.dataset.count);
@@ -498,10 +555,10 @@
       }
     });
     // Tab switching
-    body.querySelectorAll('.tab-btn').forEach(function(btn) {
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var tab = btn.dataset.tab;
-        body.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
+        document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.tab === tab); });
         body.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.toggle('active', p.dataset.panel === tab); });
       });
     });
@@ -535,6 +592,8 @@
   }
 
   function closeModal() {
+    var headerTabs = document.getElementById('modalHeaderTabs');
+    if (headerTabs) { headerTabs.classList.remove('visible'); headerTabs.innerHTML = ''; }
     var overlay = document.getElementById('modalOverlay');
     overlay.classList.remove('visible');
     setTimeout(function(){ overlay.style.display = 'none'; document.body.style.overflow = ''; }, 300);
@@ -543,16 +602,41 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
 
-  // Hide loader once page is fully loaded
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      var loader = document.getElementById('loader');
-      loader.classList.add('fade-out');
-      setTimeout(function() {
-        loader.style.display = 'none';
-      }, 650);
-    }, 400);
+  // Back to top button in modal
+  document.addEventListener('DOMContentLoaded', function() {
+    var modalTopBtn = document.getElementById('modalTopBtn');
+    var modalOverlay = document.getElementById('modalOverlay');
+    if (modalOverlay && modalTopBtn) {
+      modalOverlay.addEventListener('scroll', function() {
+        modalTopBtn.classList.toggle('visible', modalOverlay.scrollTop > 200);
+      });
+      modalTopBtn.addEventListener('click', function() {
+        modalOverlay.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
   });
+
+
+  // Progress ring loader
+  (function() {
+    var circle = document.getElementById('loaderProgress');
+    var circumference = 201;
+    var progress = 0;
+    var interval = setInterval(function() {
+      progress = Math.min(progress + (Math.random() * 8 + 4), 90);
+      circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
+    }, 120);
+
+    window.addEventListener('load', function() {
+      clearInterval(interval);
+      circle.style.strokeDashoffset = 0;
+      setTimeout(function() {
+        var loader = document.getElementById('loader');
+        loader.classList.add('fade-out');
+        setTimeout(function() { loader.style.display = 'none'; }, 650);
+      }, 400);
+    });
+  })();
 
 </script>
 </body>
